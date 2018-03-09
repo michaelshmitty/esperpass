@@ -1,0 +1,14 @@
+# Scrapbook of firewall rules to restrict connections only
+# to official servers.
+
+# Clear outging rules
+acl from_sta clear
+
+# Allow outgoing connections to specified IP
+acl from_sta IP any 185.43.124.6 allow
+
+# Allow outgoing DNS requests
+acl from_sta UDP any any any 53 allow
+
+# Deny everything else
+acl from_sta IP any any deny
