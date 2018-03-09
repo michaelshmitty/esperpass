@@ -52,7 +52,7 @@ config_load_default(sysconfig_p config)
   config->current_mac_address = 0;
   // Interval to change mac address in seconds
   // Default: 28800 (8 hours)
-  config->mac_change_interval = 600;
+  config->mac_change_interval = 28800;
 
   // list of mac addresses
   // from https://docs.google.com/spreadsheets/d/1su5u-vPrQwkTixR6YnOTWSi_Ls9lV-_XNJHaWIJspv4/edit#gid=0
