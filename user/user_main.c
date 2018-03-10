@@ -1396,7 +1396,7 @@ user_init()
 
   UART_init_console(BIT_RATE_115200, 0, console_rx_buffer, console_tx_buffer);
 
-  os_printf("\r\n\r\nWiFi Repeater %s starting\r\n", ESPERPASS_VERSION);
+  os_printf("\r\n\r\nESPerPass %s starting\r\n", ESPERPASS_VERSION);
 
   // Load config
   config_load(&config);
