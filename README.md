@@ -10,7 +10,8 @@ A similar project using a Raspberry Pi 3 is [RaspiPass](https://github.com/Pinch
 
 ## Security considerations
 Martin Ger's original ESP WiFi Repeater software has been heavily modified to strip it of any unnecessary functionality for the purpose of this project. Convenience has given way to security by removing the web configuration interface. This makes it slightly more cumbersome to configure ESPerPass for your WiFi network, but at the same time prevents your home WiFi network configuration from potentially leaking through a web configuration page.
-Currently there are no firewall rules in place yet because I don't know if there is a list of official Streetpass IP addresses. A soon as this is resolved, the software should be locked down to only allow connections to those addresses, making the usage of the open network otherwise useless.
+~~Currently there are no firewall rules in place yet because I don't know if there is a list of official Streetpass IP addresses. A soon as this is resolved, the software should be locked down to only allow connections to those addresses, making the usage of the open network otherwise useless.~~
+Firewall rules are now in place to only allow clients connected to the "attwifi" network to access the IP addresses for the Streetpass servers. This should make the implementation more secure.
 
 ## Instructions (needs improvement)
 1. Get an ESP8266 based WiFi module. I use a [Wemos D1 mini](https://www.aliexpress.com/item/ESP8266-ESP12-ESP-12-WeMos-D1-Mini-WIFI-Dev-Kit-Development-Board-NodeMCU-Lua/32653918483.html).
