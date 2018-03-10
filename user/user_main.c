@@ -395,7 +395,7 @@ console_handle_command(struct espconn *pespconn)
   #define MAX_CMD_TOKENS 9
 
   char cmd_line[MAX_CON_CMD_SIZE+1];
-  char response[256];
+  char response[512];
   char *tokens[MAX_CMD_TOKENS];
 
   int bytes_count, nTokens;
@@ -1044,6 +1044,7 @@ console_handle_command(struct espconn *pespconn)
   os_sprintf(response, "\r\nInvalid Command\r\n");
 
 command_handled:
+  to_console("\r\n");
   to_console(response);
 
 command_handled_2:
