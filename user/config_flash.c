@@ -72,6 +72,74 @@ config_load_default(sysconfig_p config)
   ets_str2macaddr(config->mac_list[13], "4E:53:50:4F:4F:4D");
   ets_str2macaddr(config->mac_list[14], "4E:53:50:4F:4F:4E");
   ets_str2macaddr(config->mac_list[15], "4E:53:50:4F:4F:4F");
+
+  // Streetpass relay whitelist
+  uint32_t daddr;
+  uint32_t dmask;
+
+  // Clear all acl rules
+  acl_clear(0);
+  acl_clear(1);
+  acl_clear(2);
+  acl_clear(3);
+
+  // Whitelist broadcast to enable DHCP
+  parse_IP_addr("255.255.255.255", &daddr, &dmask);
+  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
+
+  // Whitelist DNS
+  acl_add(0, 0, 0, 0, 0, IP_PROTO_UDP, 0, 53, ACL_ALLOW);
+
+  // Whitelist Streetpass relays
+  // acl from_sta IP any 52.43.174.40 allow
+  parse_IP_addr("52.43.174.40", &daddr, &dmask);
+  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
+
+  parse_IP_addr("104.70.153.178", &daddr, &dmask);
+  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
+
+  parse_IP_addr("104.74.48.110", &daddr, &dmask);
+  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
+
+  parse_IP_addr("23.7.18.146", &daddr, &dmask);
+  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
+
+  parse_IP_addr("23.7.24.35", &daddr, &dmask);
+  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
+
+  parse_IP_addr("52.11.210.152", &daddr, &dmask);
+  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
+
+  parse_IP_addr("52.25.179.65", &daddr, &dmask);
+  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
+
+  parse_IP_addr("52.89.56.205", &daddr, &dmask);
+  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
+
+  parse_IP_addr("54.148.137.96", &daddr, &dmask);
+  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
+
+  parse_IP_addr("54.218.98.74", &daddr, &dmask);
+  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
+
+  parse_IP_addr("54.218.99.79", &daddr, &dmask);
+  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
+
+  parse_IP_addr("54.244.22.201", &daddr, &dmask);
+  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
+
+  parse_IP_addr("69.25.139.140", &daddr, &dmask);
+  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
+
+  parse_IP_addr("192.195.204.216", &daddr, &dmask);
+  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
+
+  parse_IP_addr("52.10.249.207", &daddr, &dmask);
+  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
+
+  // Default implementation denies everything not matched above.
+  // This last rule is not necessary and commented out to save memory space:
+  // acl_add(0, 0, 0, 0, 0, 0, 0, 0, ACL_DENY);
 }
 
 int
