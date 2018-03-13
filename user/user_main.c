@@ -816,7 +816,7 @@ console_handle_command(struct espconn *pespconn)
         // to get the full ssid name.
         if (nTokens > 3)
         {
-          char ssid[50] = {};
+          char ssid[32] = {};
           int i;
 
           // The ssid starts at the 3rd token, position 2 in the tokens
@@ -855,7 +855,7 @@ console_handle_command(struct espconn *pespconn)
         // to get the full password.
         if (nTokens > 3)
         {
-          char password[50] = {};
+          char password[64] = {};
           int i;
 
           // The password starts at the 3rd token, position 2 in the tokens
