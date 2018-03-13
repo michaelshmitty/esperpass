@@ -29,7 +29,7 @@ Now finally make sure both checkboxes before the first and the second row are **
 5. Configure ESPerPass. All ESPerpass needs to know now is how to access your WiFi network at home so it can connect to the Streetpass servers. So you'll need to tell your WiFi module the name of your WiFi network at home and its password (you are using a password to protect your WiFi network, right?). For security purposes the only way to configure ESPerPass is through a serial console that you can only access with your computer when the module is connected via USB. You do not need to have the module connected to your computer as soon as it's configured for your home WiFi network. You can just plug it into any USB charger and tuck it away behind a closet or something.
 In order to connect to the module's console you'll need a terminal program. [PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) is often a popular choice. Download, install and run it. Make sure your WiFi module is connected to your computer via USB. In the "Session" category select "Serial" under "Connection type" and make sure you enter the correct COM port. The "Speed" field (baudrate) should be set to 115200. Next go to the "Terminal" category and switch on "Implicit CR in every LF". Then hit "Open" at the bottom right to open a terminal. Now hit the reset button on your ESP module and you should see some text scroll by. If everything went well you should see instructions on how to configure your home wifi network. Basically you issue 4 commands:
 * set ssid yournetworkssid
-* set password yournetwork password
+* set password yournetworkpassword
 * save
 * reset
 
