@@ -36,7 +36,7 @@ ESPTOOLOPTS	= -ff 40m -fm dio -fs 32m
 TARGET		= app
 
 # which modules (subdirectories) of the project to include in compiling
-MODULES		= driver user easygpio
+MODULES		= driver user easygpio c_functions
 EXTRA_INCDIR    = include $(BUILD_AREA)/esp-open-sdk/esp-open-lwip/include
 #EXTRA_INCDIR    = include
 
