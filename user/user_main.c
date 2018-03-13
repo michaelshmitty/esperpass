@@ -392,7 +392,7 @@ static char INVALID_ARG[] = "Invalid argument\r\n";
 void ICACHE_FLASH_ATTR
 console_handle_command(struct espconn *pespconn)
 {
-  #define MAX_CMD_TOKENS 9
+  #define MAX_CMD_TOKENS 20
 
   char cmd_line[MAX_CON_CMD_SIZE+1];
   char response[512];
@@ -810,7 +810,37 @@ console_handle_command(struct espconn *pespconn)
       // atleast 3 tokens, proceed
       if (strcmp(tokens[1], "ssid") == 0)
       {
-        os_sprintf(config.ssid, "%s", tokens[2]);
+        // Handle case when ssid has spaces in it
+        // This means the rest of the ssid has been split over the remainder
+        // of the tokens[] array and we need to re-concatenate them
+        // to get the full ssid name.
+        if (nTokens > 3)
+        {
+          char ssid[50] = {};
+          int i;
+
+          // The ssid starts at the 3rd token, position 2 in the tokens
+          // array. Hence i = 2.
+          for (i = 2; i < nTokens; i++)
+          {
+            _strcat(ssid, tokens[i]);
+
+            // Restore the space character between tokens
+            // that form the ssid.
+            // Don't add space after the last token.
+            if (i < nTokens - 1)
+            {
+              _strcat(ssid, " ");
+            }
+          }
+
+          // Copy the recomposed ssid to the config.
+          os_sprintf(config.ssid, "%s", ssid);
+        }
+        else
+        {
+          os_sprintf(config.ssid, "%s", tokens[2]);
+        }
 
         config.auto_connect = 1;
         os_sprintf(response, "SSID set (auto_connect = 1)\r\n");
@@ -819,7 +849,37 @@ console_handle_command(struct espconn *pespconn)
 
       if (strcmp(tokens[1], "password") == 0)
       {
-        os_sprintf(config.password, "%s", tokens[2]);
+        // Handle case when password has spaces in it
+        // This means the rest of the password has been split over the remainder
+        // of the tokens[] array and we need to re-concatenate them
+        // to get the full password.
+        if (nTokens > 3)
+        {
+          char password[50] = {};
+          int i;
+
+          // The password starts at the 3rd token, position 2 in the tokens
+          // array. Hence i = 2.
+          for (i = 2; i < nTokens; i++)
+          {
+            _strcat(password, tokens[i]);
+
+            // Restore the space character between tokens
+            // that form the password.
+            // Don't add space after the last token.
+            if (i < nTokens - 1)
+            {
+              _strcat(password, " ");
+            }
+          }
+
+          // Copy the recomposed password to the config.
+          os_sprintf(config.password, "%s", password);
+        }
+        else
+        {
+          os_sprintf(config.password, "%s", tokens[2]);
+        }
 
         os_sprintf(response, "Password set\r\n");
         goto command_handled;
@@ -1467,7 +1527,10 @@ user_init()
     os_printf("\r\n\r\n***ESPerPass not yet configured***\r\n");
     os_printf("Hit return to show the CMD> prompt and follow these instructions:\r\n");
     os_printf("Note that the console does not support the backspace key.\r\n");
-    os_printf("If you make a mistake, hit return and try the command again.\r\n\r\n");
+    os_printf("If you make a mistake, hit return and try the command again.\r\n");
+    os_printf("Note that the maximum length for the SSID is 31 character,\r\n");
+    os_printf("for the password 64 characters. Spaces are allowed.\r\n\r\n");
+
     os_printf("1. Set your Internet WiFi ssid: set ssid <name>\r\n");
     os_printf("2. Set your Internet WiFi password: set password <password>\r\n");
     os_printf("3. Save the settings: save\r\n");
