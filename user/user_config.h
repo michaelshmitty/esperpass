@@ -1,7 +1,7 @@
 #ifndef _USER_CONFIG_
 #define _USER_CONFIG_
 
-#define ESPERPASS_VERSION "V0.0.4"
+#define ESPERPASS_VERSION "V0.0.5"
 
 #define WIFI_SSID "ssid"
 #define WIFI_PASSWORD "password"

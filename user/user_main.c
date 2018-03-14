@@ -501,17 +501,19 @@ console_handle_command(struct espconn *pespconn)
                  IP2STR(&config.my_gw));
       to_console(response);
 
+      uint8_t current_mac[6];
+      wifi_get_macaddr(SOFTAP_IF, current_mac);
       os_sprintf(response,
                  "STA MAC: %02x:%02x:%02x:%02x:%02x:%02x\r\nAP MAC:  %02x:%02x:%02x:%02x:%02x:%02x\r\n",
                  config.STA_MAC_address[0], config.STA_MAC_address[1],
                  config.STA_MAC_address[2], config.STA_MAC_address[3],
                  config.STA_MAC_address[4], config.STA_MAC_address[5],
-                 config.mac_list[config.current_mac_address][0],
-                 config.mac_list[config.current_mac_address][1],
-                 config.mac_list[config.current_mac_address][2],
-                 config.mac_list[config.current_mac_address][3],
-                 config.mac_list[config.current_mac_address][4],
-                 config.mac_list[config.current_mac_address][5]);
+                 current_mac[0],
+                 current_mac[1],
+                 current_mac[2],
+                 current_mac[3],
+                 current_mac[4],
+                 current_mac[5]);
       to_console(response);
       os_sprintf(response, "STA hostname: %s\r\n", config.sta_hostname);
       to_console(response);
@@ -1069,6 +1071,21 @@ console_handle_command(struct espconn *pespconn)
         config.my_gw.addr = ipaddr_addr(tokens[2]);
         os_sprintf(response, "Gateway set to %d.%d.%d.%d\r\n",
                    IP2STR(&config.my_gw));
+        goto command_handled;
+      }
+
+      if (strcmp(tokens[1], "ap_mac") == 0)
+      {
+        uint8_t new_ap_mac[6];
+        if (!parse_mac(new_ap_mac, tokens[2]))
+        {
+          os_sprintf(response, INVALID_ARG);
+        }
+        else
+        {
+          wifi_set_macaddr(SOFTAP_IF, new_ap_mac);
+          os_sprintf(response, "AP MAC set\r\n");
+        }
         goto command_handled;
       }
 
