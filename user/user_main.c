@@ -1545,7 +1545,7 @@ user_init()
     os_printf("Hit return to show the CMD> prompt and follow these instructions:\r\n");
     os_printf("Note that the console does not support the backspace key.\r\n");
     os_printf("If you make a mistake, hit return and try the command again.\r\n");
-    os_printf("Note that the maximum length for the SSID is 31 character,\r\n");
+    os_printf("Note that the maximum length for the SSID is 31 characters,\r\n");
     os_printf("for the password 64 characters. Spaces are allowed.\r\n\r\n");
 
     os_printf("1. Set your Internet WiFi ssid: set ssid <name>\r\n");
