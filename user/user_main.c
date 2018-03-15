@@ -395,7 +395,7 @@ console_handle_command(struct espconn *pespconn)
   #define MAX_CMD_TOKENS 20
 
   char cmd_line[MAX_CON_CMD_SIZE+1];
-  char response[512];
+  char response[1024];
   char *tokens[MAX_CMD_TOKENS];
 
   int bytes_count, nTokens;
@@ -1545,7 +1545,7 @@ user_init()
     os_printf("Hit return to show the CMD> prompt and follow these instructions:\r\n");
     os_printf("Note that the console does not support the backspace key.\r\n");
     os_printf("If you make a mistake, hit return and try the command again.\r\n");
-    os_printf("Note that the maximum length for the SSID is 31 character,\r\n");
+    os_printf("Note that the maximum length for the SSID is 31 characters,\r\n");
     os_printf("for the password 64 characters. Spaces are allowed.\r\n\r\n");
 
     os_printf("1. Set your Internet WiFi ssid: set ssid <name>\r\n");

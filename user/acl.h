@@ -5,7 +5,7 @@
 #include "lwip/pbuf.h"
 
 #define MAX_NO_ACLS 4
-#define MAX_ACL_ENTRIES 20
+#define MAX_ACL_ENTRIES 30
 
 #define ACL_DENY     0x0
 #define ACL_ALLOW    0x1
