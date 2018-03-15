@@ -138,6 +138,26 @@ config_load_default(sysconfig_p config)
   parse_IP_addr("52.10.249.207", &daddr, &dmask);
   acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
 
+  // NOTE(m): New IP addresses found by Dal78
+  // NOTE(m): The list of Streetpass IP addresses may be dynamic :-/
+  parse_IP_addr("52.24.183.161", &daddr, &dmask);
+  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
+
+  parse_IP_addr("52.39.19.157", &daddr, &dmask);
+  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
+
+  parse_IP_addr("34.208.213.200", &daddr, &dmask);
+  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
+
+  parse_IP_addr("104.103.189.191", &daddr, &dmask);
+  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
+
+  parse_IP_addr("23.2.226.76", &daddr, &dmask);
+  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
+
+  parse_IP_addr("35.167.248.201", &daddr, &dmask);
+  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
+
   // Default implementation denies everything not matched above.
   // This last rule is not necessary and commented out to save memory space:
   // acl_add(0, 0, 0, 0, 0, 0, 0, 0, ACL_DENY);
