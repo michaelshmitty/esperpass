@@ -10,8 +10,8 @@ A similar project using a Raspberry Pi 3 is [RaspiPass](https://github.com/Pinch
 
 ## Security considerations
 Martin Ger's original ESP WiFi Repeater software has been heavily modified to strip it of any unnecessary functionality for the purpose of this project. Convenience has given way to security by removing the web configuration interface. This makes it slightly more cumbersome to configure ESPerPass for your WiFi network, but at the same time prevents your home WiFi network configuration from potentially leaking through a web configuration page.
-~~Currently there are no firewall rules in place yet because I don't know if there is a list of official Streetpass IP addresses. A soon as this is resolved, the software should be locked down to only allow connections to those addresses, making the usage of the open network otherwise useless.~~
-Firewall rules are now in place to only allow clients connected to the "attwifi" network to access the IP addresses for the Streetpass servers. This should make the implementation more secure.
+After trying to implement firewall rules to limit the outbound connections we noticed a significant drop in Streetpass tags. Not only does the list we got from the Raspipass project seem out of date, it also appeared that the list of Streetpass addresses may be dynamic.
+So firewall functionality is not present but instead the "attwifi" network is configured to only stay up for 90 seconds every 15 minutes. After 15 minutes have passed the system will restart with a new random Streetpass mac address and the cycle will start over.
 
 ## Instructions
 Ok so getting this to work can be a bit of a pain. But I assure you, once it's set up you don't need to worry about it anymore. I did the development on MacOS but I'm going to assume most will be using Windows to flash the firmware and those who don't have Windows have a way to get it, either through a virtual machine or another computer.
@@ -39,5 +39,4 @@ The ESP module will remember the settings so you can now safely unplug it from y
 **NOTE**: If something about these instructions is unclear or you can't seem to make it work, just open an issue and I'll try to help out as much as I can. This initial setup is a pain, but once it's done you never need to touch it again. And for just a few $$ and some effort you have a reliable, secure Streetpass relay at home!
 
 ## TODO
-* ~~Implement firewall rules to restrict connections to official servers.~~ **Done!**
-* Implement mac address list management through console.
+* Review / update list of Streetpass mac addresses.
