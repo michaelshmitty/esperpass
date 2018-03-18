@@ -11,13 +11,13 @@
 #include "lwip/app/dhcpserver.h"
 
 #include "user_config.h"
-#include "acl.h"
 
 #define FLASH_BLOCK_NO 0xc
 
 #define MAGIC_NUMBER 0x112005fc
 
-#define MAX_MAC_LIST_LENGTH 15
+// Number of mac addresses in StreetPass relay mac list
+#define MAC_LIST_LENGTH 16
 
 typedef struct
 {
@@ -35,9 +35,11 @@ typedef struct
   uint8_t bssid[6]; // Optional: BSSID the AP
   uint8_t sta_hostname[32]; // Name of the station
   uint8_t ap_ssid[32]; // SSID of the own AP
+
+  // ESPerPass specific configuration
   uint8_t first_run; // Has ESPerPass been configured yet?
-  uint8_t current_mac_address;  // Holds currently broadcasted HomePass mac address index
-  int32_t mac_change_interval;  // Interval to rotate HomePass mac address (in seconds)
+  int32_t system_restart_interval;
+  int32_t ap_enable_duration;
 
   // Seconds without ap traffic will cause reset (-1 off, default)
   int32_t ap_watchdog;
@@ -60,14 +62,10 @@ typedef struct
 
   uint16_t dhcps_entries; // number of allocated entries in the following table
   struct dhcps_pool dhcps_p[MAX_DHCP]; // DHCP entries
-#ifdef ACLS
-  acl_entry acl[MAX_NO_ACLS][MAX_ACL_ENTRIES]; // ACL entries
-  uint8_t acl_freep[MAX_NO_ACLS]; // ACL free pointers
-#endif
 
   // HomePass mac list
   // Allow 20 slots
-  uint8_t mac_list[19][6];
+  uint8_t mac_list[MAC_LIST_LENGTH][6];
 
 } sysconfig_t, *sysconfig_p;
 

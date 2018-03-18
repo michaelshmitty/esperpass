@@ -45,15 +45,15 @@ config_load_default(sysconfig_p config)
   wifi_get_macaddr(STATION_IF, config->STA_MAC_address);
 
   config->dhcps_entries = 0;
-#ifdef ACLS
-  acl_init();	// initializes the ACLs, written in config during save
-#endif
 
-  config->current_mac_address = 0;
-  // Interval to change mac address in seconds
-  // Default: 3600 (1 hour)
-  // This should rotate every mac address in the list roughly every 16 hours.
-  config->mac_change_interval = 3600;
+  // NOTE(m): Interval at which to restart the system to select a new
+  // random StreetPass MAC from the list.
+  // In seconds. Default: 900 (15 minutes)
+  config->system_restart_interval = 900;
+
+  // NOTE(m): How long to keep the "attwifi" AP up during one MAC cycle
+  // In seconds. Default: 90 seconds.
+  config->ap_enable_duration = 90;
 
   // list of mac addresses
   // from https://docs.google.com/spreadsheets/d/1su5u-vPrQwkTixR6YnOTWSi_Ls9lV-_XNJHaWIJspv4/edit#gid=0
@@ -73,94 +73,6 @@ config_load_default(sysconfig_p config)
   ets_str2macaddr(config->mac_list[13], "4E:53:50:4F:4F:4D");
   ets_str2macaddr(config->mac_list[14], "4E:53:50:4F:4F:4E");
   ets_str2macaddr(config->mac_list[15], "4E:53:50:4F:4F:4F");
-
-  // Streetpass relay whitelist
-  uint32_t daddr;
-  uint32_t dmask;
-
-  // Clear all acl rules
-  acl_clear(0);
-  acl_clear(1);
-  acl_clear(2);
-  acl_clear(3);
-
-  // Whitelist broadcast to enable DHCP
-  parse_IP_addr("255.255.255.255", &daddr, &dmask);
-  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
-
-  // Whitelist DNS
-  acl_add(0, 0, 0, 0, 0, IP_PROTO_UDP, 0, 53, ACL_ALLOW);
-
-  // Whitelist Streetpass relays
-  // acl from_sta IP any 52.43.174.40 allow
-  parse_IP_addr("52.43.174.40", &daddr, &dmask);
-  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
-
-  parse_IP_addr("104.70.153.178", &daddr, &dmask);
-  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
-
-  parse_IP_addr("104.74.48.110", &daddr, &dmask);
-  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
-
-  parse_IP_addr("23.7.18.146", &daddr, &dmask);
-  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
-
-  parse_IP_addr("23.7.24.35", &daddr, &dmask);
-  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
-
-  parse_IP_addr("52.11.210.152", &daddr, &dmask);
-  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
-
-  parse_IP_addr("52.25.179.65", &daddr, &dmask);
-  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
-
-  parse_IP_addr("52.89.56.205", &daddr, &dmask);
-  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
-
-  parse_IP_addr("54.148.137.96", &daddr, &dmask);
-  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
-
-  parse_IP_addr("54.218.98.74", &daddr, &dmask);
-  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
-
-  parse_IP_addr("54.218.99.79", &daddr, &dmask);
-  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
-
-  parse_IP_addr("54.244.22.201", &daddr, &dmask);
-  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
-
-  parse_IP_addr("69.25.139.140", &daddr, &dmask);
-  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
-
-  parse_IP_addr("192.195.204.216", &daddr, &dmask);
-  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
-
-  parse_IP_addr("52.10.249.207", &daddr, &dmask);
-  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
-
-  // NOTE(m): New IP addresses found by Dal78
-  // NOTE(m): The list of Streetpass IP addresses may be dynamic :-/
-  parse_IP_addr("52.24.183.161", &daddr, &dmask);
-  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
-
-  parse_IP_addr("52.39.19.157", &daddr, &dmask);
-  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
-
-  parse_IP_addr("34.208.213.200", &daddr, &dmask);
-  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
-
-  parse_IP_addr("104.103.189.191", &daddr, &dmask);
-  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
-
-  parse_IP_addr("23.2.226.76", &daddr, &dmask);
-  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
-
-  parse_IP_addr("35.167.248.201", &daddr, &dmask);
-  acl_add(0, 0, 0, daddr, dmask, 0, 0, 0, ACL_ALLOW);
-
-  // Default implementation denies everything not matched above.
-  // This last rule is not necessary and commented out to save memory space:
-  // acl_add(0, 0, 0, 0, 0, 0, 0, 0, ACL_DENY);
 }
 
 int
@@ -193,10 +105,7 @@ config_load(sysconfig_p config)
     config_save(config);
     return -1;
   }
-#ifdef ACLS
-  os_memcpy(&acl, &(config->acl), sizeof(acl));
-  os_memcpy(&acl_freep, &(config->acl_freep), sizeof(acl_freep));
-#endif
+
   return 0;
 }
 
@@ -204,10 +113,6 @@ void
 config_save(sysconfig_p config)
 {
   uint16_t base_address = FLASH_BLOCK_NO;
-#ifdef ACLS
-  os_memcpy(&(config->acl), &acl, sizeof(acl));
-  os_memcpy(&(config->acl_freep), &acl_freep, sizeof(acl_freep));
-#endif
   os_printf("Saving configuration\r\n");
   spi_flash_erase_sector(base_address);
   spi_flash_write(base_address * SPI_FLASH_SEC_SIZE,
