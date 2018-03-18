@@ -44,7 +44,6 @@ typedef struct
   int32_t client_watchdog;
 
   ip_addr_t network_addr; // Address of the internal network
-  ip_addr_t dns_addr; // Optional: address of the dns server
 
   ip_addr_t my_addr; // Optional (if not DHCP): IP address of the uplink side
   ip_addr_t my_netmask; // Optional (if not DHCP): IP netmask of the uplink side

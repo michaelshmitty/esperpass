@@ -32,7 +32,6 @@ config_load_default(sysconfig_p config)
   config->client_watchdog = -1;
 
   IP4_ADDR(&config->network_addr, 192, 168, 4, 1);
-  config->dns_addr.addr = 0;  // use DHCP
   config->my_addr.addr = 0;  // use DHCP
   config->my_netmask.addr = 0;  // use DHCP
   config->my_gw.addr = 0;  // use DHCP
