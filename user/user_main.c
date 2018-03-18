@@ -23,10 +23,6 @@
 
 #include "easygpio.h"
 
-#ifdef ACLS
-#include "acl.h"
-#endif
-
 /* System Task, for signals refer to user_config.h */
 #define user_procTaskPrio 0
 #define user_procTaskQueueLen 1
@@ -83,24 +79,6 @@ my_input_ap(struct pbuf *p, struct netif *inp)
 
   client_watchdog_cnt = config.client_watchdog;
 
-#ifdef ACLS
-  // Check ACLs - store result
-  uint8_t acl_check = ACL_ALLOW;
-  if (!acl_is_empty(0))
-  {
-    acl_check = acl_check_packet(0, p);
-  }
-#endif
-
-#ifdef ACLS
-  // If not allowed, drop packet
-  if (!(acl_check&ACL_ALLOW))
-  {
-    pbuf_free(p);
-    return;
-  }
-#endif
-
   Bytes_in += p->tot_len;
   Packets_in++;
 
@@ -117,24 +95,6 @@ my_output_ap(struct netif *outp, struct pbuf *p)
     easygpio_outputSet (config.status_led, 0);
   }
 
-#ifdef ACLS
-  // Check ACLs - store result
-  uint8_t acl_check = ACL_ALLOW;
-  if (!acl_is_empty(1))
-  {
-    acl_check = acl_check_packet(1, p);
-  }
-#endif
-
-#ifdef ACLS
-  // If not allowed, drop packet
-  if (!(acl_check&ACL_ALLOW))
-  {
-    pbuf_free(p);
-    return;
-  }
-#endif
-
   Bytes_out += p->tot_len;
   Packets_out++;
 
@@ -145,26 +105,12 @@ err_t ICACHE_FLASH_ATTR
 my_input_sta(struct pbuf *p, struct netif *inp)
 {
   ap_watchdog_cnt = config.ap_watchdog;
-#ifdef ACLS
-  if (!acl_is_empty(2) && !(acl_check_packet(2, p) & ACL_ALLOW))
-  {
-    pbuf_free(p);
-    return;
-  }
-#endif
   orig_input_sta (p, inp);
 }
 
 err_t ICACHE_FLASH_ATTR
 my_output_sta(struct netif *outp, struct pbuf *p)
 {
-#ifdef ACLS
-  if (!acl_is_empty(3) && !(acl_check_packet(3, p) & ACL_ALLOW))
-  {
-    pbuf_free(p);
-    return;
-  }
-#endif
   orig_output_sta (outp, p);
 }
 
@@ -304,67 +250,6 @@ console_send_response(struct espconn *pespconn, uint8_t do_cmd)
   }
 }
 
-
-#ifdef ACLS
-void ICACHE_FLASH_ATTR
-parse_IP_addr(uint8_t *str, uint32_t *addr, uint32_t *mask)
-{
-  int i;
-  uint32_t net;
-  if (strcmp(str, "any") == 0)
-  {
-    *addr = 0;
-    *mask = 0;
-    return;
-  }
-
-  for(i=0; str[i]!=0 && str[i]!='/'; i++);
-
-  *mask = 0xffffffff;
-  if (str[i]!=0)
-  {
-    str[i]=0;
-    *mask <<= (32 - atoi(&str[i+1]));
-  }
-  *mask = htonl(*mask);
-  *addr = ipaddr_addr(str);
-}
-
-struct espconn *deny_cb_conn = 0;
-uint8_t acl_debug = 0;
-
-uint8_t
-acl_deny_cb(uint8_t proto,
-            uint32_t saddr,
-            uint16_t s_port,
-            uint32_t daddr,
-            uint16_t d_port,
-            uint8_t allow)
-{
-  char response[128];
-
-    if (!acl_debug)
-    {
-      return allow;
-    }
-
-    os_sprintf(response,
-               "\rdeny: %s Src: %d.%d.%d.%d:%d Dst: %d.%d.%d.%d:%d\r\n",
-               proto==IP_PROTO_TCP?"TCP":proto==IP_PROTO_UDP?"UDP":"IP4",
-               IP2STR((ip_addr_t *)&saddr),
-               s_port,
-               IP2STR((ip_addr_t *)&daddr),
-               d_port);
-
-    if (acl_debug)
-    {
-      to_console(response);
-      system_os_post(0, SIG_CONSOLE_TX, (ETSParam) deny_cb_conn);
-    }
-    return allow;
-}
-#endif /* ACLS */
-
 // Use this from ROM instead
 int ets_str2macaddr(uint8 *mac, char *str_mac);
 #define parse_mac ets_str2macaddr
@@ -431,10 +316,6 @@ console_handle_command(struct espconn *pespconn)
     to_console(response);
 #endif
 
-#ifdef ACLS
-    os_sprintf(response, "acl [from_sta|to_sta|from_ap|to_ap] clear\r\nacl [from_sta|to_sta|from_ap|to_ap] [IP|TCP|UDP] <src_addr> [<src_port>] <dest_addr> [<dest_port>] [allow|deny|allow_monitor|deny_monitor]\r\n");
-    to_console(response);
-#endif
     goto command_handled_2;
   }
 
@@ -579,143 +460,7 @@ console_handle_command(struct espconn *pespconn)
       }
       goto command_handled_2;
     }
-#ifdef ACLS
-    if (nTokens == 2 && strcmp(tokens[1], "acl") == 0)
-    {
-      char *txt[] = {"From STA:\r\n",
-                     "To STA:\r\n", "From AP:\r\n", "To AP:\r\n"};
-      for (i = 0; i<MAX_NO_ACLS; i++)
-      {
-        if (!acl_is_empty(i))
-        {
-          ringbuf_memcpy_into(console_tx_buffer, txt[i], os_strlen(txt[i]));
-          acl_show(i, response);
-          to_console(response);
-        }
-      }
-      os_sprintf(response, "Packets denied: %d Packets allowed: %d\r\n",
-                 acl_deny_count, acl_allow_count);
-      to_console(response);
-      goto command_handled_2;
-    }
-#endif
   }
-
-#ifdef ACLS
-  if (strcmp(tokens[0], "acl") == 0)
-  {
-    uint8_t acl_no;
-    uint8_t proto;
-    uint32_t saddr;
-    uint32_t smask;
-    uint16_t sport;
-    uint32_t daddr;
-    uint32_t dmask;
-    uint16_t dport;
-    uint8_t allow;
-    uint8_t last_arg;
-
-    if (nTokens < 3)
-    {
-      os_sprintf(response, INVALID_NUMARGS);
-      goto command_handled;
-    }
-
-    if (strcmp(tokens[1],"from_sta")==0)
-    {
-      acl_no = 0;
-    }
-    else if (strcmp(tokens[1],"to_sta")==0)
-    {
-      acl_no = 1;
-    }
-    else if (strcmp(tokens[1],"from_ap")==0)
-    {
-      acl_no = 2;
-    }
-    else if (strcmp(tokens[1],"to_ap")==0)
-    {
-      acl_no = 3;
-    }
-    else
-    {
-      os_sprintf(response, INVALID_ARG);
-      goto command_handled;
-    }
-
-    if (strcmp(tokens[2],"clear")==0)
-    {
-      acl_clear(acl_no);
-      os_sprintf(response, "ACL cleared\r\n");
-      goto command_handled;
-    }
-
-    last_arg = 7;
-    if (strcmp(tokens[2],"IP") == 0)
-    {
-      proto = 0;
-      last_arg = 5;
-    }
-    else if (strcmp(tokens[2],"TCP") == 0)
-    {
-      proto = IP_PROTO_TCP;
-    }
-    else if (strcmp(tokens[2],"UDP") == 0)
-    {
-      proto = IP_PROTO_UDP;
-    }
-    else
-    {
-      os_sprintf(response, INVALID_ARG);
-      goto command_handled;
-    }
-
-    if (nTokens != last_arg+1)
-    {
-      os_sprintf(response, INVALID_NUMARGS);
-      goto command_handled;
-    }
-
-    if (proto == 0)
-    {
-      parse_IP_addr(tokens[3], &saddr, &smask);
-      parse_IP_addr(tokens[4], &daddr, &dmask);
-      sport = dport = 0;
-    }
-    else
-    {
-      parse_IP_addr(tokens[3], &saddr, &smask);
-      sport = (uint16_t)atoi(tokens[4]);
-      parse_IP_addr(tokens[5], &daddr, &dmask);
-      dport = (uint16_t)atoi(tokens[6]);
-    }
-
-    if (strcmp(tokens[last_arg],"allow") == 0)
-    {
-       allow = ACL_ALLOW;
-    }
-    else if (strcmp(tokens[last_arg],"deny") == 0)
-    {
-      allow = ACL_DENY;
-    }
-    else
-    {
-      os_sprintf(response, INVALID_ARG);
-      goto command_handled;
-    }
-
-    if (acl_add(acl_no, saddr, smask, daddr, dmask, proto, sport,
-                dport, allow))
-    {
-      os_sprintf(response, "ACL added\r\n");
-    }
-    else
-    {
-      os_sprintf(response, "ACL add failed\r\n");
-    }
-    goto command_handled;
-  }
-#endif /* ACLS */
 
   if (strcmp(tokens[0], "connect") == 0)
   {
@@ -946,15 +691,6 @@ console_handle_command(struct espconn *pespconn)
         os_sprintf(response, "Client watchdog set to %d\r\n", config.client_watchdog);
         goto command_handled;
       }
-
-#ifdef ACLS
-      if (strcmp(tokens[1], "acl_debug") == 0)
-      {
-        acl_debug = atoi(tokens[2]);
-        os_sprintf(response, "ACL debug set\r\n");
-        goto command_handled;
-      }
-#endif
 
       if (strcmp(tokens[1], "speed") == 0)
       {
@@ -1478,15 +1214,6 @@ user_init()
   // Load config
   config_load(&config);
 
-#ifdef ACLS
-  acl_debug = 0;
-  int i;
-  for(i=0; i< MAX_NO_ACLS; i++)
-  {
-    acl_clear_stats(i);
-  }
-  acl_set_deny_cb(acl_deny_cb);
-#endif
   // Config GPIO pin as output
   if (config.status_led == 1)
   {

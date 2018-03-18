@@ -11,7 +11,6 @@
 #include "lwip/app/dhcpserver.h"
 
 #include "user_config.h"
-#include "acl.h"
 
 #define FLASH_BLOCK_NO 0xc
 
@@ -60,10 +59,6 @@ typedef struct
 
   uint16_t dhcps_entries; // number of allocated entries in the following table
   struct dhcps_pool dhcps_p[MAX_DHCP]; // DHCP entries
-#ifdef ACLS
-  acl_entry acl[MAX_NO_ACLS][MAX_ACL_ENTRIES]; // ACL entries
-  uint8_t acl_freep[MAX_NO_ACLS]; // ACL free pointers
-#endif
 
   // HomePass mac list
   // Allow 20 slots
