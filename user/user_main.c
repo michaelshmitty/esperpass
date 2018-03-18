@@ -6,6 +6,7 @@
 #include "os_type.h"
 #include "lwip/ip.h"
 #include "lwip/netif.h"
+#include "lwip/dns.h"
 #include "lwip/lwip_napt.h"
 #include "lwip/app/dhcpserver.h"
 #include "lwip/app/espconn.h"
@@ -32,7 +33,8 @@ static os_timer_t ptimer;
 
 int32_t ap_watchdog_cnt;
 int32_t client_watchdog_cnt;
-int32_t mac_cnt;
+int32_t awake_cnt = 0;
+int32_t ap_enabled_cnt = 0;
 
 /* Some stats */
 uint64_t Bytes_in, Bytes_out, Bytes_in_last, Bytes_out_last;
@@ -45,6 +47,7 @@ sysconfig_t config;
 static ringbuf_t console_rx_buffer, console_tx_buffer;
 
 static ip_addr_t my_ip;
+static ip_addr_t dns_ip;
 bool connected;
 uint8_t my_channel;
 bool do_ip_config;
@@ -311,7 +314,7 @@ console_handle_command(struct espconn *pespconn)
     os_sprintf(response, "show [config|stats]\r\n");
     to_console(response);
 
-    os_sprintf(response, "set [ssid|password|auto_connect|ap_ssid] <val>\r\nset [sta_mac|sta_hostname] <val>\r\nset [ip|netmask|gw] <val>\r\n");
+    os_sprintf(response, "set [ssid|password|auto_connect|ap_ssid] <val>\r\nset [sta_mac|sta_hostname] <val>\r\nset [dns|ip|netmask|gw] <val>\r\n");
     to_console(response);
     os_sprintf(response, "set [speed|status_led|config_port] <val>\r\nsave [config|dhcp]\r\nconnect | disconnect| reset [factory] | quit\r\n");
     to_console(response);
@@ -373,6 +376,12 @@ console_handle_command(struct espconn *pespconn)
       os_sprintf(response, "AP:  SSID:%s IP:%d.%d.%d.%d/24",
                  config.ap_ssid,
                  IP2STR(&config.network_addr));
+      to_console(response);
+
+      // if static DNS, add it
+      os_sprintf(response,
+                 config.dns_addr.addr?" DNS: %d.%d.%d.%d\r\n":"\r\n",
+                 IP2STR(&config.dns_addr));
       to_console(response);
 
       // if static IP, add it
@@ -757,6 +766,27 @@ console_handle_command(struct espconn *pespconn)
         goto command_handled;
       }
 
+      if (strcmp(tokens[1], "dns") == 0)
+      {
+        if (os_strcmp(tokens[2], "dhcp") == 0)
+        {
+          config.dns_addr.addr = 0;
+          os_sprintf(response, "DNS from DHCP\r\n");
+        }
+        else
+        {
+          config.dns_addr.addr = ipaddr_addr(tokens[2]);
+          os_sprintf(response, "DNS set to %d.%d.%d.%d\r\n",
+          IP2STR(&config.dns_addr));
+          if (config.dns_addr.addr)
+          {
+            dns_ip.addr = config.dns_addr.addr;
+            dhcps_set_DNS(&dns_ip);
+          }
+        }
+        goto command_handled;
+      }
+
       if (strcmp(tokens[1], "ip") == 0)
       {
         if (os_strcmp(tokens[2], "dhcp") == 0)
@@ -859,33 +889,34 @@ timer_func(void *arg)
   // Check if watchdogs
   if (toggle)
   {
-    // Rotate HomePass mac address if necessary
     if (config.auto_connect == 1)
     {
-      if (mac_cnt >= config.mac_change_interval)
+      // NOTE(m): Restart the system after a while to set a new random
+      // StreetPass MAC address from the list.
+      if (awake_cnt >= config.system_restart_interval)
       {
-        mac_cnt = 0;
-
-        os_printf("Changing mac address.\r\n");
-        os_printf("Old index: %d\r\n\r\n", current_mac_address_index);
-
-        if (current_mac_address_index >= MAC_LIST_LENGTH - 1)
-        {
-          current_mac_address_index = 0;
-        }
-        else
-        {
-          current_mac_address_index++;
-        }
-
-        os_printf("New index: %d\r\n", current_mac_address_index);
-
-        // Start using new mac address
-        wifi_set_macaddr(SOFTAP_IF, config.mac_list[current_mac_address_index]);
+        system_restart();
       }
       else
       {
-        mac_cnt++;
+        awake_cnt++;
+      }
+
+      // NOTE(m): Switch off the access point after a while if
+      // it's not switched off already.
+      if (wifi_get_opmode() == STATIONAP_MODE)
+      {
+        if (ap_enabled_cnt >= config.ap_enable_duration)
+        {
+          ap_enabled_cnt = 0;
+          {
+            wifi_set_opmode(STATION_MODE);
+          }
+        }
+        else
+        {
+          ap_enabled_cnt++;
+        }
       }
     }
 
@@ -1003,10 +1034,17 @@ wifi_handle_event_cb(System_Event_t *evt)
 
     case EVENT_STAMODE_GOT_IP:
     {
-      os_printf("ip:" IPSTR ",mask:" IPSTR ",gw:" IPSTR "\n",
+      if (config.dns_addr.addr == 0)
+      {
+        dns_ip = dns_getserver(0);
+      }
+      dhcps_set_DNS(&dns_ip);
+
+      os_printf("ip:" IPSTR ",mask:" IPSTR ",gw:" IPSTR ",dns:" IPSTR "\n",
                 IP2STR(&evt->event_info.got_ip.ip),
                 IP2STR(&evt->event_info.got_ip.mask),
-                IP2STR(&evt->event_info.got_ip.gw));
+                IP2STR(&evt->event_info.got_ip.gw),
+                IP2STR(&dns_ip));
 
       my_ip = evt->event_info.got_ip.ip;
       connected = true;
@@ -1100,6 +1138,9 @@ user_set_softap_ip_config(void)
 
   wifi_softap_dhcps_start();
 
+  // Change the DNS server again
+  dhcps_set_DNS(&dns_ip);
+
   // Enter any saved dhcp enties if they are in this network
   for (i = 0; i<config.dhcps_entries; i++)
   {
@@ -1187,6 +1228,18 @@ user_init()
     easygpio_outputSet (config.status_led, 0);
   }
 
+  // Configure the AP and start it, if required
+  if (config.dns_addr.addr == 0)
+  {
+    // Google's DNS as default, as long as we havn't got one from DHCP
+    IP4_ADDR(&dns_ip, 8, 8, 8, 8);
+  }
+  else
+  {
+    // We have a static DNS server
+    dns_ip.addr = config.dns_addr.addr;
+  }
+
   wifi_set_opmode(STATIONAP_MODE);
   wifi_set_macaddr(SOFTAP_IF, config.mac_list[current_mac_address_index]);
   user_set_softap_wifi_config();
@@ -1205,6 +1258,7 @@ user_init()
     info.gw.addr = config.my_gw.addr;
     info.netmask.addr = config.my_netmask.addr;
     wifi_set_ip_info(STATION_IF, &info);
+    espconn_dns_setserver(0, &dns_ip);
   }
 
   remote_console_disconnect = 0;

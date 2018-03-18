@@ -32,6 +32,7 @@ config_load_default(sysconfig_p config)
   config->client_watchdog = -1;
 
   IP4_ADDR(&config->network_addr, 192, 168, 4, 1);
+  config->dns_addr.addr = 0;  // use DHCP
   config->my_addr.addr = 0;  // use DHCP
   config->my_netmask.addr = 0;  // use DHCP
   config->my_gw.addr = 0;  // use DHCP
@@ -45,10 +46,14 @@ config_load_default(sysconfig_p config)
 
   config->dhcps_entries = 0;
 
-  // Interval to change mac address in seconds
-  // Default: 3600 (1 hour)
-  // This should rotate every mac address in the list roughly every 16 hours.
-  config->mac_change_interval = 3600;
+  // NOTE(m): Interval at which to restart the system to select a new
+  // random StreetPass MAC from the list.
+  // In seconds. Default: 900 (15 minutes)
+  config->system_restart_interval = 900;
+
+  // NOTE(m): How long to keep the "attwifi" AP up during one MAC cycle
+  // In seconds. Default: 90 seconds.
+  config->ap_enable_duration = 90;
 
   // list of mac addresses
   // from https://docs.google.com/spreadsheets/d/1su5u-vPrQwkTixR6YnOTWSi_Ls9lV-_XNJHaWIJspv4/edit#gid=0

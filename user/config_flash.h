@@ -35,8 +35,11 @@ typedef struct
   uint8_t bssid[6]; // Optional: BSSID the AP
   uint8_t sta_hostname[32]; // Name of the station
   uint8_t ap_ssid[32]; // SSID of the own AP
+
+  // ESPerPass specific configuration
   uint8_t first_run; // Has ESPerPass been configured yet?
-  int32_t mac_change_interval;  // Interval to rotate HomePass mac address (in seconds)
+  int32_t system_restart_interval;
+  int32_t ap_enable_duration;
 
   // Seconds without ap traffic will cause reset (-1 off, default)
   int32_t ap_watchdog;
@@ -44,6 +47,7 @@ typedef struct
   int32_t client_watchdog;
 
   ip_addr_t network_addr; // Address of the internal network
+  ip_addr_t dns_addr; // Optional: address of the dns server
 
   ip_addr_t my_addr; // Optional (if not DHCP): IP address of the uplink side
   ip_addr_t my_netmask; // Optional (if not DHCP): IP netmask of the uplink side
