@@ -45,7 +45,6 @@ config_load_default(sysconfig_p config)
 
   config->dhcps_entries = 0;
 
-  config->current_mac_address = 0;
   // Interval to change mac address in seconds
   // Default: 3600 (1 hour)
   // This should rotate every mac address in the list roughly every 16 hours.

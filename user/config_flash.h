@@ -16,7 +16,8 @@
 
 #define MAGIC_NUMBER 0x112005fc
 
-#define MAX_MAC_LIST_LENGTH 15
+// Number of mac addresses in StreetPass relay mac list
+#define MAC_LIST_LENGTH 16
 
 typedef struct
 {
@@ -35,7 +36,6 @@ typedef struct
   uint8_t sta_hostname[32]; // Name of the station
   uint8_t ap_ssid[32]; // SSID of the own AP
   uint8_t first_run; // Has ESPerPass been configured yet?
-  uint8_t current_mac_address;  // Holds currently broadcasted HomePass mac address index
   int32_t mac_change_interval;  // Interval to rotate HomePass mac address (in seconds)
 
   // Seconds without ap traffic will cause reset (-1 off, default)
@@ -61,7 +61,7 @@ typedef struct
 
   // HomePass mac list
   // Allow 20 slots
-  uint8_t mac_list[19][6];
+  uint8_t mac_list[MAC_LIST_LENGTH][6];
 
 } sysconfig_t, *sysconfig_p;
 

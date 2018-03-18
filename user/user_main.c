@@ -59,6 +59,14 @@ void ICACHE_FLASH_ATTR user_set_softap_wifi_config(void);
 void ICACHE_FLASH_ATTR user_set_softap_ip_config(void);
 void ICACHE_FLASH_ATTR user_set_station_config(void);
 
+uint8_t current_mac_address_index = 0;;
+
+int
+ICACHE_FLASH_ATTR random_mac_index()
+{
+  return rand() % sizeof(config.mac_list) / sizeof(config.mac_list[0]);
+}
+
 void
 ICACHE_FLASH_ATTR to_console(char *str)
 {
@@ -323,7 +331,7 @@ console_handle_command(struct espconn *pespconn)
     int16_t i;
 
     to_console("HomePass mac list:\r\n");
-    for (i = 0; i < MAX_MAC_LIST_LENGTH; i++)
+    for (i = 0; i <= MAC_LIST_LENGTH - 1; i++)
     {
       os_sprintf(response, "%02x:%02x:%02x:%02x:%02x:%02x\r\n",
                  config.mac_list[i][0], config.mac_list[i][1],
@@ -857,40 +865,23 @@ timer_func(void *arg)
       if (mac_cnt >= config.mac_change_interval)
       {
         mac_cnt = 0;
-        // os_printf("Rotating mac address...\r\n");
-        // os_printf("config.current_mac_address = %d\r\n", config.current_mac_address);
 
-        // os_printf("OLD MAC: %02x:%02x:%02x:%02x:%02x:%02x\r\n",
-        //           config.mac_list[config.current_mac_address][0],
-        //           config.mac_list[config.current_mac_address][1],
-        //           config.mac_list[config.current_mac_address][2],
-        //           config.mac_list[config.current_mac_address][3],
-        //           config.mac_list[config.current_mac_address][4],
-        //           config.mac_list[config.current_mac_address][5]);
+        os_printf("Changing mac address.\r\n");
+        os_printf("Old index: %d\r\n\r\n", current_mac_address_index);
 
-        if (config.current_mac_address >= (MAX_MAC_LIST_LENGTH - 1))
+        if (current_mac_address_index >= MAC_LIST_LENGTH - 1)
         {
-          config.current_mac_address = 0;
+          current_mac_address_index = 0;
         }
         else
         {
-          config.current_mac_address++;
+          current_mac_address_index++;
         }
 
-        // os_printf("NEW MAC: %02x:%02x:%02x:%02x:%02x:%02x\r\n\r\n",
-        //           config.mac_list[config.current_mac_address][0],
-        //           config.mac_list[config.current_mac_address][1],
-        //           config.mac_list[config.current_mac_address][2],
-        //           config.mac_list[config.current_mac_address][3],
-        //           config.mac_list[config.current_mac_address][4],
-        //           config.mac_list[config.current_mac_address][5]);
-
-        // Save current mac address config to flash
-        config_save(&config);
+        os_printf("New index: %d\r\n", current_mac_address_index);
 
         // Start using new mac address
-        // wifi_set_macaddr(SOFTAP_IF, config.mac_list[config.current_mac_address]);
-        system_restart();
+        wifi_set_macaddr(SOFTAP_IF, config.mac_list[current_mac_address_index]);
       }
       else
       {
@@ -1153,6 +1144,11 @@ user_set_station_config(void)
 void ICACHE_FLASH_ATTR
 user_init()
 {
+  // Generate random seed for rand() function
+  srand(system_get_rtc_time());
+  // Generate random mac address index
+  current_mac_address_index = random_mac_index();
+
   struct ip_info info;
 
   connected = false;
@@ -1192,7 +1188,7 @@ user_init()
   }
 
   wifi_set_opmode(STATIONAP_MODE);
-  wifi_set_macaddr(SOFTAP_IF, config.mac_list[config.current_mac_address]);
+  wifi_set_macaddr(SOFTAP_IF, config.mac_list[current_mac_address_index]);
   user_set_softap_wifi_config();
   do_ip_config = true;
 
@@ -1244,7 +1240,7 @@ user_init()
   os_timer_setfn(&ptimer, timer_func, 0);
   os_timer_arm(&ptimer, 500, 0);
 
-  //Start task
+  // Start task
   system_os_task(user_procTask, user_procTaskPrio, user_procTaskQueue,
                  user_procTaskQueueLen);
 }
