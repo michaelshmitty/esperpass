@@ -1,3 +1,7 @@
+# PLEASE NOTE
+It seems like Nintendo has quietly shut down the servers that manage the StreetPass data. ESPerPass and other similar HomePass implementations have always relied on these servers. Without them it's impossible to exchange tags. This is very unfortunate and very likely means that this is the end of HomePass. I will keep this project on here for historical purposes and future reference but unless StreetPass comes back (through Nintendo, which is very unlikely or through a homebrew solution) this project is no longer maintained. See [Issue #9](https://github.com/michaelshmitty/esperpass/issues/9) for more information and links to other resources.
+
+
 # ESPerPass
 A 3DS HomePass implementation for the ESP8266 programmable WiFi chip.
 Inspired by [this reddit post](https://www.reddit.com/r/3DS/comments/80k0qb/homepass_for_cheap_using_an_esp8266/)
